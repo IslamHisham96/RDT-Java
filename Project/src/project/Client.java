@@ -29,7 +29,7 @@ public class Client {
                 buf = msg.getBytes();
                 DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
                 socket.send(packet);
-                packet = new DatagramPacket(buf, buf.length);
+                packet = new DatagramPacket(new byte[265], 265);
                 socket.receive(packet);
                 String received = new String(packet.getData());
                 if (received.equals("END")) {
