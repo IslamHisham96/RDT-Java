@@ -5,9 +5,10 @@
  */
 package project;
 
-//import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.Scanner;
 
 /**
  *
@@ -16,25 +17,24 @@ import java.util.*;
 public class Client {
 
     public static void main(String[] args) {
-        try {
-            DatagramSocket socket;
-            InetAddress address;
-            byte[] buf;
-            socket = new DatagramSocket();
-            address = InetAddress.getByName("localhost");
+        try {          
+            DatagramSocket socket = new DatagramSocket();
+            DatagramPacket packet;           
+            InetAddress address = InetAddress.getByName("localhost");
             Scanner sc = new Scanner(System.in);
+            byte[] buf;
             String msg;
             while (true) {
                 msg = sc.next();
+                if (msg.equals("end")) {
+                    throw new Exception();
+                }
                 buf = msg.getBytes();
-                DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
+                packet = new DatagramPacket(buf, buf.length, address, 4445);
                 socket.send(packet);
-                packet = new DatagramPacket(new byte[265], 265);
+                packet = new DatagramPacket(new byte[256], 256);
                 socket.receive(packet);
                 String received = new String(packet.getData());
-                if (received.equals("END")) {
-                    break;
-                }
                 System.out.println(received);
             }
 

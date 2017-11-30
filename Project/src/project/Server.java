@@ -5,72 +5,37 @@
  */
 package project;
 
-import java.io.*;
-import java.net.*;
-import java.nio.charset.Charset;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 /**
  *
  * @author Islam
  */
-class EchoHandler extends Thread {
-
-    private Socket s;
-
-    public EchoHandler(Socket s) {
-        this.s = s;
-    }
-
-    public void run() {
-        try {
-            InputStreamReader isr = new InputStreamReader(s.getInputStream());
-            OutputStreamWriter osr = new OutputStreamWriter(s.getOutputStream());
-            BufferedReader br = new BufferedReader(isr);
-            PrintWriter pr = new PrintWriter(osr);
-            while (true) {
-                String str = br.readLine();
-                System.out.println(str);
-                pr.println(str.toUpperCase());
-                pr.flush();
-                if (str.equalsIgnoreCase("salam")) {
-                    break;
-                }
-            }
-            s.close();
-        } catch (Exception ex) {
-        }
-
-    }
-}
-
 public class Server {
 
     public static void main(String[] args) {
         try {
-            DatagramSocket socket;
-            boolean running;
-            byte[] buf = new byte[256];
-            socket = new DatagramSocket(4445);
-            running = true;
-
+            DatagramSocket socket = new DatagramSocket(4445);
+            DatagramPacket packet;
+            InetAddress address;
+            int port;
+            byte [] send;
             while (true) {
-                DatagramPacket packet
-                        = new DatagramPacket(buf, buf.length);
+                packet = new DatagramPacket(new byte[256], 256);
                 socket.receive(packet);
-
-                InetAddress address = packet.getAddress();
-                int port = packet.getPort();
-                byte [] sent = new String(buf,"UTF-8").toUpperCase().getBytes(Charset.forName("UTF-8"));
-                packet = new DatagramPacket(sent, sent.length, address, port);
-                String received
-                        = new String(packet.getData(), 0, packet.getLength());
-
+                String received = new String(packet.getData());
                 if (received.equals("end")) {
-                   continue;
+                    continue;
                 }
+                address = packet.getAddress();
+                port = packet.getPort();
+                send = received.toUpperCase().getBytes();
+                packet = new DatagramPacket(send, send.length, address, port);
                 socket.send(packet);
             }
-          //  socket.close();
+            //  socket.close();
         } catch (Exception ex) {
         }
     }

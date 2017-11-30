@@ -5,16 +5,15 @@
  */
 package project;
 
-import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -22,22 +21,32 @@ import java.util.logging.Logger;
  */
 public class RDT {
 
-    private static byte senderSeqNumber = 0;
-    private static byte receiverSeqNumber = 0;
-    private static boolean acknowledged = false;
+    private byte senderSeqNumber = 0;
+    private byte receiverSeqNumber = 0;
+    private boolean acknowledged = false;
 
-    public static InetAddress address;
-    public static short port;
+    private DatagramSocket socket;
+    private InetAddress address;
+    private short port;
 
-    static {
+    public RDT(DatagramSocket socket, InetAddress address, short port) {
+        this.socket = socket;
+        this.address = address;
+        this.port = port;
+    }
+
+   
+
+    public RDT(DatagramSocket socket) {
         try {
+            this.socket = socket;
             address = InetAddress.getByName("localhost");
             port = 4445;
         } catch (Exception ex) {
         }
     }
 
-    public static DatagramPacket make_pkt(String data, byte seq) {
+    public DatagramPacket make_pkt(String data, byte seq) {
         byte[] buf;
         buf = data.getBytes();
         buf = Arrays.copyOf(buf, buf.length + 1);
@@ -46,7 +55,7 @@ public class RDT {
         return packet;
     }
 
-    public static String receive_rdt(DatagramSocket socket) {
+    public String receive_rdt() {
         boolean isOldAcknowledged = false;
         while (!isOldAcknowledged) {
             DatagramPacket packet = new DatagramPacket(new byte[256], 256);
@@ -64,7 +73,7 @@ public class RDT {
         return null;
     }
 
-    public static void send_rdt(DatagramSocket socket, String data) {
+    public void send_rdt(String data) {
         ExecutorService es = Executors.newFixedThreadPool(1);
         try {
             while (!acknowledged) {
