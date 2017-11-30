@@ -19,27 +19,24 @@ public class Client {
     public static void main(String[] args) {
         try {          
             DatagramSocket socket = new DatagramSocket();
-            DatagramPacket packet;           
-            InetAddress address = InetAddress.getByName("localhost");
+            RDT Client = new RDT(socket);
             Scanner sc = new Scanner(System.in);
-            byte[] buf;
             String msg;
             while (true) {
-                msg = sc.next();
+                msg = sc.next();              
+                Client.send_rdt(msg);
                 if (msg.equals("end")) {
+                    socket.close();
                     throw new Exception();
                 }
-                buf = msg.getBytes();
-                packet = new DatagramPacket(buf, buf.length, address, 4445);
-                socket.send(packet);
-                packet = new DatagramPacket(new byte[256], 256);
-                socket.receive(packet);
-                String received = new String(packet.getData());
+                String received = Client.receive_rdt();
                 System.out.println(received);
             }
 
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             System.out.println("closed");
+            
         }
     }
 }

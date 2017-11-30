@@ -27,16 +27,13 @@ public class RDT {
 
     private DatagramSocket socket;
     private InetAddress address;
-    private short port;
+    private int port;
 
-    public RDT(DatagramSocket socket, InetAddress address, short port) {
+    public RDT(DatagramSocket socket, InetAddress address, int port) {
         this.socket = socket;
         this.address = address;
         this.port = port;
     }
-
-   
-
     public RDT(DatagramSocket socket) {
         try {
             this.socket = socket;
@@ -45,7 +42,12 @@ public class RDT {
         } catch (Exception ex) {
         }
     }
-
+    public void reset_connection()
+    {
+        senderSeqNumber = 0;
+        receiverSeqNumber = 0;
+        acknowledged = false;
+    }
     public DatagramPacket make_pkt(String data, byte seq) {
         byte[] buf;
         buf = data.getBytes();
@@ -54,28 +56,35 @@ public class RDT {
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         return packet;
     }
-    
-    public DatagramPacket createEmptyPacket()
-    {
+
+    public DatagramPacket createEmptyPacket() {
         return new DatagramPacket(new byte[256], 256);
     }
 
     public String receive_rdt() {
         boolean isOldAcknowledged = false;
+        String received = null;
         while (!isOldAcknowledged) {
             DatagramPacket packet = createEmptyPacket();
             try {
                 socket.receive(packet);
-                if (packet.getLength() == 1) //ack
-                {
+                port = packet.getPort();
+                address = packet.getAddress();
+                byte[] rec = packet.getData();
 
-                } else {
-
+                //if (packet.getLength() == 1){
+                if (rec[packet.getLength() - 1] == receiverSeqNumber) {
+                    received = new String(rec, 0, packet.getLength() - 1);
+                    isOldAcknowledged = true;
                 }
+                DatagramPacket ack = make_pkt("", rec[packet.getLength() - 1]);
+                socket.send(ack);
+
             } catch (Exception ex) {
             }
         }
-        return null;
+        receiverSeqNumber = (byte) ((receiverSeqNumber + 1) % 2);
+        return received;
     }
 
     public void send_rdt(String data) {
@@ -98,8 +107,8 @@ public class RDT {
                                     if (ack == senderSeqNumber) {
                                         acknowledged = true;
                                     }
-                                } else { // send the last ack if available
-
+                                } else {
+                                    acknowledged = true;
                                 }
                             }
 
@@ -131,5 +140,12 @@ public class RDT {
         buf[buf.length - 1] = seq;
         //System.out.println(Arrays.toString(buf));
         //buf[buf.length-1]=seq;
+        try {
+            DatagramSocket m = new DatagramSocket();
+            RDT r = new RDT(m);
+            DatagramPacket ack = r.make_pkt("", seq);
+            System.out.println(Arrays.toString(ack.getData()));
+        } catch (Exception ex) {
+        }
     }
 }

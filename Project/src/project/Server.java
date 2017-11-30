@@ -18,25 +18,19 @@ public class Server {
     public static void main(String[] args) {
         try {
             DatagramSocket socket = new DatagramSocket(4445);
-            DatagramPacket packet;
-            InetAddress address;
-            int port;
-            byte [] send;
+            RDT Server = new RDT(socket);
             while (true) {
-                packet = new DatagramPacket(new byte[256], 256);
-                socket.receive(packet);
-                String received = new String(packet.getData());
+                
+                String received = Server.receive_rdt();
                 if (received.equals("end")) {
+                    Server.reset_connection();
                     continue;
                 }
-                address = packet.getAddress();
-                port = packet.getPort();
-                send = received.toUpperCase().getBytes();
-                packet = new DatagramPacket(send, send.length, address, port);
-                socket.send(packet);
+                Server.send_rdt(received.toUpperCase());
             }
             //  socket.close();
         } catch (Exception ex) {
+            
         }
     }
 }
