@@ -45,16 +45,22 @@ public class RDT {
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         return packet;
     }
-    
-    public static String receive_rdt(DatagramSocket socket){
+
+    public static String receive_rdt(DatagramSocket socket) {
         boolean isOldAcknowledged = false;
-        while(!isOldAcknowledged){
+        while (!isOldAcknowledged) {
             DatagramPacket packet = new DatagramPacket(new byte[256], 256);
             try {
                 socket.receive(packet);
-                
-            } catch (Exception ex) {}
-        } 
+                if (packet.getLength() == 1) //ack
+                {
+
+                } else {
+
+                }
+            } catch (Exception ex) {
+            }
+        }
         return null;
     }
 
@@ -65,7 +71,7 @@ public class RDT {
                 DatagramPacket sendpacket = make_pkt(data, senderSeqNumber);
                 socket.send(sendpacket);
                 try {
-                    
+
                     FutureTask<String> ft = new FutureTask<String>(new Callable<String>() {
                         @Override
                         public String call() throws Exception {
@@ -74,9 +80,13 @@ public class RDT {
                                 byte[] buf = new byte[1];
                                 DatagramPacket packet = new DatagramPacket(buf, 1);
                                 socket.receive(packet);
-                                byte ack = (packet.getData())[0];
-                                if (ack == senderSeqNumber) {
-                                    acknowledged = true;
+                                if (packet.getLength() == 1) { //ack 
+                                    byte ack = (packet.getData())[0];
+                                    if (ack == senderSeqNumber) {
+                                        acknowledged = true;
+                                    }
+                                } else { // send the last ack if available
+
                                 }
                             }
 
@@ -92,9 +102,9 @@ public class RDT {
             }
             senderSeqNumber = (byte) ((senderSeqNumber + 1) % 2);
             acknowledged = false;
-            
-        } catch (Exception ex) {}
-        finally{
+
+        } catch (Exception ex) {
+        } finally {
             es.shutdown();
         }
     }
