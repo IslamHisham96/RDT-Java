@@ -54,11 +54,16 @@ public class RDT {
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
         return packet;
     }
+    
+    public DatagramPacket createEmptyPacket()
+    {
+        return new DatagramPacket(new byte[256], 256);
+    }
 
     public String receive_rdt() {
         boolean isOldAcknowledged = false;
         while (!isOldAcknowledged) {
-            DatagramPacket packet = new DatagramPacket(new byte[256], 256);
+            DatagramPacket packet = createEmptyPacket();
             try {
                 socket.receive(packet);
                 if (packet.getLength() == 1) //ack
@@ -86,8 +91,7 @@ public class RDT {
                         public String call() throws Exception {
 
                             while (!acknowledged) {
-                                byte[] buf = new byte[1];
-                                DatagramPacket packet = new DatagramPacket(buf, 1);
+                                DatagramPacket packet = createEmptyPacket();
                                 socket.receive(packet);
                                 if (packet.getLength() == 1) { //ack 
                                     byte ack = (packet.getData())[0];
